@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "Supply Chain & Trade News Intelligence - AI Radar (v3.5.0)",
+  "version": "3.5.0",
+  "description": "Full-featured duplicate of Supply Chain Intelligence: Live Radar, Multi-Engine Search Cascade (Tavily, Serper, Brave, Exa, Firecrawl), Cross-Provider 429 Auto-Failover, Top 10 Alerts, Regional Heatmap, 30-Day Forecast, and Video Studio.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Supply Chain Intelligence (v3.5.0)"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "supply-chain-intelligence-radar@extension.app",
+      "strict_min_version": "109.0"
+    }
+  },
+  "host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.tavily.com/*",
+    "https://google.serper.dev/*",
+    "https://api.search.brave.com/*",
+    "https://api.exa.ai/*",
+    "https://api.firecrawl.dev/*",
+    "https://api.groq.com/*",
+    "https://openrouter.ai/*",
+    "https://api.cerebras.ai/*",
+    "https://api.x.ai/*",
+    "https://api.openai.com/*",
+    "<all_urls>"
+  ]
+}

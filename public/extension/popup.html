@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Supply Chain News Intelligence — Browser Extension Terminal (v3.5.0)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-base: #020617;
+      --bg-card: #0b1329;
+      --bg-card-hover: #0f1c3d;
+      --bg-header: #070e24;
+      --bg-substrip: #04091a;
+      --border-color: #1e293b;
+      --border-focus: #3b82f6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --blue-accent: #2563eb;
+      --blue-glow: rgba(37, 99, 235, 0.2);
+    }
+    body.light-theme {
+      --bg-base: #f8fafc;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --bg-header: #ffffff;
+      --bg-substrip: #f1f5f9;
+      --border-color: #e2e8f0;
+      --border-focus: #2563eb;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      --blue-accent: #2563eb;
+      --blue-glow: rgba(37, 99, 235, 0.1);
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      min-width: 790px;
+      min-height: 600px;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      font-size: 13px;
+    }
+    /* Full tab desktop expansion mode */
+    body.full-tab {
+      width: 100vw;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-base); }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Top Strip */
+    .top-strip {
+      background: var(--bg-substrip);
+      border-bottom: 1px solid var(--border-color);
+      padding: 6px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+    .live-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #10b981;
+      box-shadow: 0 0 8px #10b981; animation: livePulse 2s infinite;
+      display: inline-block; margin-right: 6px;
+    }
+    @keyframes livePulse {
+      0% { opacity: 0.6; transform: scale(0.95); }
+      50% { opacity: 1; transform: scale(1.15); }
+      100% { opacity: 0.6; transform: scale(0.95); }
+    }
+    .window-btn {
+      padding: 2px 7px; font-size: 10px; font-family: 'JetBrains Mono', monospace;
+      background: transparent; border: 1px solid var(--border-color);
+      color: var(--text-muted); border-radius: 4px; cursor: pointer;
+    }
+    .window-btn.active {
+      background: var(--blue-accent); color: #ffffff; border-color: var(--blue-accent); font-weight: 700;
+    }
+
+    /* Main Navbar */
+    .navbar {
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .brand-group { display: flex; align-items: center; gap: 10px; }
+    .logo-box {
+      width: 34px; height: 34px; border-radius: 8px; background: #2563eb;
+      display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px;
+      box-shadow: 0 2px 8px var(--blue-glow);
+    }
+    .brand-title { font-size: 14px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-main); }
+    .brand-tag {
+      font-size: 9px; font-family: 'JetBrains Mono', monospace; padding: 2px 6px;
+      border-radius: 4px; background: rgba(59, 130, 246, 0.15); color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3); font-weight: 700;
+    }
+    .version-tag {
+      font-size: 9px; font-family: 'JetBrains Mono', monospace; padding: 2px 6px;
+      border-radius: 4px; background: rgba(16, 185, 129, 0.15); color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700;
+    }
+
+    .nav-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .btn {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      color: var(--text-main); font-size: 11px; font-weight: 600; padding: 6px 10px;
+      border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+      transition: all 0.15s ease; white-space: nowrap;
+    }
+    .btn:hover { background: var(--bg-card-hover); border-color: #475569; }
+    .btn-primary { background: #2563eb; border-color: #3b82f6; color: #ffffff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-emerald { background: #059669; border-color: #10b981; color: #ffffff; }
+    .btn-emerald:hover { background: #047857; }
+    .btn-amber { background: #d97706; border-color: #f59e0b; color: #ffffff; }
+    .btn-counter {
+      font-size: 10px; font-family: 'JetBrains Mono', monospace; padding: 1px 5px;
+      border-radius: 10px; background: rgba(255, 255, 255, 0.2); font-weight: 700;
+    }
+
+    /* Key Alert Banner */
+    .key-alert-banner {
+      background: linear-gradient(90deg, #1e1b4b, #0f172a);
+      border-bottom: 1px solid #4338ca;
+      padding: 7px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 11px;
+      color: #c7d2fe;
+    }
+    .key-alert-banner.active-key {
+      background: linear-gradient(90deg, #064e3b, #0f172a);
+      border-color: #059669;
+      color: #a7f3d0;
+    }
+
+    /* Topic Search Bar */
+    .topic-search-strip {
+      background: var(--bg-substrip);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .search-input-wrap {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      max-width: 480px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 6px 30px 6px 32px;
+      border-radius: 7px;
+      font-size: 12px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--border-focus); }
+    .search-icon { position: absolute; left: 10px; color: var(--text-dim); }
+    .search-clear { position: absolute; right: 8px; cursor: pointer; color: var(--text-dim); background: none; border: none; }
+    .suggested-pills { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-muted); overflow-x: auto; }
+    .pill {
+      font-size: 10px; padding: 2px 7px; border-radius: 5px;
+      border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-muted);
+      cursor: pointer; white-space: nowrap;
+    }
+    .pill:hover { border-color: #60a5fa; color: #93c5fd; }
+    .pill.active { background: #1e3a8a; border-color: #3b82f6; color: #bfdbfe; font-weight: 700; }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 9px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.15s ease;
+    }
+    .tab-btn:hover { color: var(--text-main); }
+    .tab-btn.active {
+      color: #3b82f6;
+      border-bottom-color: #3b82f6;
+      font-weight: 700;
+    }
+
+    /* Main Content */
+    .main-body {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 900px) {
+      .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 9px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .kpi-card:hover { border-color: #475569; }
+    .kpi-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); font-weight: 700; }
+    .kpi-value { font-size: 18px; font-weight: 800; letter-spacing: -0.02em; }
+    .kpi-sub { font-size: 10px; color: var(--text-dim); }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 9px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    select, input[type="text"], input[type="password"] {
+      background: var(--bg-base);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      outline: none;
+    }
+    select:focus, input:focus { border-color: var(--border-focus); }
+
+    /* News Cards */
+    .news-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.15s ease;
+    }
+    .news-card:hover { border-color: #3b82f6; box-shadow: 0 4px 16px var(--blue-glow); }
+    .news-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .news-card-title { font-size: 14px; font-weight: 700; line-height: 1.35; color: var(--text-main); }
+    .priority-badge {
+      font-size: 11px; font-family: 'JetBrains Mono', monospace; font-weight: 800;
+      padding: 3px 8px; border-radius: 5px; white-space: nowrap; cursor: pointer;
+    }
+    .priority-critical { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .priority-high { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.4); }
+    .priority-important { background: rgba(234, 179, 8, 0.18); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.4); }
+
+    .tag-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .tag {
+      font-size: 10px; padding: 2px 6px; border-radius: 4px;
+      background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-color);
+    }
+    .tag-bangladesh { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); font-weight: 700; }
+    .news-summary-box { font-size: 12px; color: var(--text-muted); line-height: 1.45; }
+    .key-facts-list {
+      background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 7px;
+      padding: 8px 12px; font-size: 11px; line-height: 1.4; display: flex; flex-direction: column; gap: 4px;
+    }
+    .key-fact-bullet { display: flex; gap: 6px; }
+    .bullet-dot { color: #3b82f6; }
+
+    /* Impact Grid */
+    .impact-breakdown-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+      font-size: 11px; background: rgba(0, 0, 0, 0.15); padding: 8px; border-radius: 7px; border: 1px solid var(--border-color);
+    }
+    .impact-item-label { font-size: 9px; text-transform: uppercase; color: var(--text-dim); font-weight: 700; }
+    .impact-item-val { font-weight: 600; color: var(--text-main); margin-top: 1px; }
+
+    /* News Card Actions */
+    .news-card-footer {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding-top: 8px; border-top: 1px solid var(--border-color); flex-wrap: wrap;
+    }
+    .card-actions-left { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .card-actions-right { display: flex; align-items: center; gap: 6px; }
+
+    /* Modals & Drawers */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; p: 16px;
+    }
+    .modal-box {
+      width: 100%; max-width: 680px; max-height: 88vh; background: var(--bg-card);
+      border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column;
+      overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--border-color);
+      display: flex; align-items: center; justify-content: space-between; background: var(--bg-header);
+    }
+    .modal-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .modal-body { padding: 18px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; font-size: 12px; }
+    .modal-footer {
+      padding: 12px 18px; border-top: 1px solid var(--border-color);
+      display: flex; justify-content: flex-end; gap: 8px; background: var(--bg-header);
+    }
+
+    /* Score breakdown meters */
+    .score-meter-row { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .meter-label-row { display: flex; justify-content: space-between; font-size: 11px; }
+    .meter-bar { height: 6px; background: var(--bg-base); border-radius: 3px; overflow: hidden; }
+    .meter-fill { height: 100%; border-radius: 3px; }
+
+    /* Provider Selector Grid */
+    .provider-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .provider-btn {
+      background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px;
+      padding: 8px 10px; cursor: pointer; text-align: left; transition: all 0.15s ease;
+    }
+    .provider-btn:hover { border-color: #64748b; }
+    .provider-btn.active { border-color: #a855f7; background: rgba(168, 85, 247, 0.1); }
+    .provider-name { font-weight: 700; font-size: 11px; }
+    .provider-tag { font-size: 9px; color: var(--text-dim); }
+
+    /* Full-screen expand button badge */
+    .expand-badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #ffffff;
+      border: 1px solid #8b5cf6; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+    }
+
+    /* Settings internal tabs */
+    .settings-tab-nav {
+      display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; margin-bottom: 14px;
+    }
+    .settings-tab-btn {
+      background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 6px 12px;
+      font-size: 11px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: all 0.15s ease;
+    }
+    .settings-tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+    .settings-tab-btn.active {
+      background: var(--blue-accent); color: #ffffff; border-color: var(--blue-accent);
+    }
+    .settings-pane { display: none; flex-direction: column; gap: 12px; }
+    .settings-pane.active { display: flex; }
+
+    /* Waterfall priority serial list */
+    .waterfall-list { display: flex; flex-direction: column; gap: 6px; }
+    .waterfall-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px;
+    }
+    .waterfall-rank {
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 800;
+      padding: 2px 7px; border-radius: 4px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .waterfall-controls { display: flex; align-items: center; gap: 4px; }
+    .btn-reorder {
+      padding: 2px 8px; font-size: 10px; font-weight: 700; background: var(--bg-card);
+      border: 1px solid var(--border-color); border-radius: 4px; color: var(--text-muted); cursor: pointer;
+    }
+    .btn-reorder:hover:not(:disabled) { background: var(--border-color); color: var(--text-main); }
+    .btn-reorder:disabled { opacity: 0.3; cursor: not-allowed; }
+    .key-entry-card {
+      background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 12px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+
+    /* Article Detail Modal Tabs & Related Events Clustered Cards */
+    .detail-tab-nav {
+      display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 10px;
+    }
+    .detail-tab-btn {
+      background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 5px 10px;
+      font-size: 11px; font-weight: 700; color: var(--text-dim); cursor: pointer; transition: all 0.15s ease;
+    }
+    .detail-tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+    .detail-tab-btn.active {
+      background: var(--blue-accent); color: #ffffff; border-color: var(--blue-accent);
+    }
+    .detail-pane { display: none; flex-direction: column; gap: 12px; }
+    .detail-pane.active { display: flex; }
+
+    .clustered-card {
+      background: var(--bg-base); border: 1px solid var(--border-color); border-radius: 8px;
+      padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; transition: border-color 0.15s ease;
+    }
+    .clustered-card:hover { border-color: rgba(59, 130, 246, 0.6); }
+    .match-badge {
+      font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 800;
+      padding: 2px 6px; border-radius: 4px; border: 1px solid transparent;
+    }
+    .match-high { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+    .match-mid { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); }
+    .match-low { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border-color: rgba(245, 158, 11, 0.3); }
+  </style>
+</head>
+<body>
+  <!-- Top News Window Bar -->
+  <div class="top-strip">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span><span class="live-dot"></span><strong style="color: #34d399;">LIVE RADAR FEED</strong></span>
+      <span>|</span>
+      <span id="window-status-text">News Window: Past 72 Hours · Reputable Global Wire Sources</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 4px;">
+      <span style="font-size: 10px; color: var(--text-dim); margin-right: 4px;">WINDOW:</span>
+      <button class="window-btn" data-window="6h">6h</button>
+      <button class="window-btn" data-window="12h">12h</button>
+      <button class="window-btn" data-window="24h">24h</button>
+      <button class="window-btn" data-window="48h">48h</button>
+      <button class="window-btn active" data-window="72h">72h</button>
+      <button class="window-btn" data-window="7d">7d</button>
+    </div>
+  </div>
+
+  <!-- Primary Navigation Bar -->
+  <header class="navbar">
+    <div class="brand-group">
+      <div class="logo-box">🧭</div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span class="brand-title">SupplyChain News Intelligence</span>
+          <span class="brand-tag">ENTERPRISE RADAR</span>
+          <span class="version-tag" id="header-version-badge">v3.5.0 CASCADE & FAILOVER</span>
+        </div>
+        <div style="font-size: 10px; color: var(--text-dim);">
+          Global Sourcing, Logistics & Procurement Risk Radar (Browser Extension Edition)
+        </div>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <!-- Full tab desktop expansion -->
+      <button id="btn-expand-fulltab" class="expand-badge" title="Open as full desktop tab for maximum widescreen productivity">
+        ⛶ Open Full Tab
+      </button>
+
+      <button id="btn-ai-status" class="btn" title="View AI Model Auto-Discovery Engine Status">
+        ⚡ AI Engine (<span id="detected-model-label">gemini-3.8-flash</span>)
+      </button>
+
+      <button id="btn-executive-brief" class="btn" title="Open Daily CPO Executive Briefing">
+        📋 Daily CPO Brief
+      </button>
+
+      <button id="btn-quick-read" class="btn" title="Temporary reading queue for this session">
+        ⚡ Quick Read <span class="btn-counter" id="quick-read-counter">0</span>
+      </button>
+
+      <button id="btn-saved-articles" class="btn" title="View bookmarked articles">
+        🔖 Saved <span class="btn-counter" id="saved-counter">0</span>
+      </button>
+
+      <button id="btn-video-tracker" class="btn" title="Track videos created">
+        ✅ Created <span class="btn-counter" id="tracker-counter">0</span>
+      </button>
+
+      <button id="btn-readme-bangla" class="btn" title="ব্যবহার নির্দেশিকা (Bangla Readme Guide)">
+        📖 Readme (বাংলা)
+      </button>
+
+      <button id="btn-settings" class="btn" title="AI Provider and API Key Configuration">
+        ⚙️ Settings
+      </button>
+
+      <button id="btn-toggle-theme" class="btn" title="Toggle Light/Dark Theme">
+        🌙
+      </button>
+
+      <button id="btn-refresh-feed" class="btn btn-primary" title="Query AI for Live Global Wire News">
+        🔄 Refresh News
+      </button>
+    </div>
+  </header>
+
+  <!-- Key Alert & Multi-Provider Banner -->
+  <div class="key-alert-banner" id="key-banner">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 14px;">🔑</span>
+      <span id="key-banner-text">
+        <strong>Autonomous AI Engine Ready:</strong> Enter your free Google Gemini API Key in Settings (⚙️) to query real-time live wire feeds with zero developer server load!
+      </span>
+    </div>
+    <div style="display: flex; items-center; gap: 6px;">
+      <button id="btn-banner-setup-key" class="btn" style="padding: 2px 8px; font-size: 10px;">Setup API Key</button>
+    </div>
+  </div>
+
+  <!-- Topic Search & Suggestions Strip -->
+  <div class="topic-search-strip">
+    <form id="search-form" class="search-input-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="topic-search-input" class="search-input" placeholder="Search any topic across global news (past 72h)... e.g. Red Sea, Bangladesh RMG, Chips" />
+      <button type="button" id="btn-clear-search" class="search-clear">✕</button>
+      <button type="submit" class="btn btn-primary" style="margin-left: 6px; padding: 4px 10px; font-size: 11px;">Search</button>
+    </form>
+
+    <div class="suggested-pills">
+      <span>Suggested:</span>
+      <button class="pill" data-topic="Red Sea">⚓ Red Sea</button>
+      <button class="pill" data-topic="Bangladesh RMG">🏭 Bangladesh RMG</button>
+      <button class="pill" data-topic="Semiconductors">⚡ Semiconductors</button>
+      <button class="pill" data-topic="Port Strike">🏗️ Port Strike</button>
+      <button class="pill" data-topic="Copper & Mining">💎 Copper & Mining</button>
+      <button class="pill" id="btn-reset-topic" style="display: none; background: #dc2626; color: #fff; border-color: #ef4444;">Reset ✕</button>
+    </div>
+  </div>
+
+  <!-- Primary Tabs -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" data-tab="dashboard">🌐 Intelligence Dashboard</button>
+    <button class="tab-btn" data-tab="top10">⚡ Top 10 Things to Know</button>
+    <button class="tab-btn" data-tab="radar">🧭 Risk Radar</button>
+    <button class="tab-btn" data-tab="heatmap">🗺️ Regional Heatmap</button>
+    <button class="tab-btn" data-tab="forecast">📈 30-Day Forecast</button>
+    <button class="tab-btn" data-tab="trends">📊 Emerging Trends</button>
+    <button class="tab-btn" data-tab="bangladesh">🇧🇩 Bangladesh Impact</button>
+    <button class="tab-btn" data-tab="videoBriefs">🎬 Video Brief Studio</button>
+  </nav>
+
+  <!-- Main View Container -->
+  <main class="main-body" id="main-view">
+    <!-- View 1: Dashboard -->
+    <div id="tab-content-dashboard" class="tab-pane active" style="display: flex; flex-direction: column; gap: 16px;">
+      <!-- KPI Bar -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">📰 Articles Analyzed</div>
+          <div class="kpi-value" id="kpi-total-analyzed" style="color: #60a5fa;">284</div>
+          <div class="kpi-sub">Across 42 Global Outlets</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">🚨 Critical Alerts</div>
+          <div class="kpi-value" id="kpi-critical-alerts" style="color: #f87171;">14 Priority</div>
+          <div class="kpi-sub">Score &ge; 85 / 100</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">⏱️ Avg Transit Shock</div>
+          <div class="kpi-value" id="kpi-avg-delay" style="color: #fb923c;">+12-14 Days</div>
+          <div class="kpi-sub">Red Sea / Africa Route</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">💲 Landed Cost Shift</div>
+          <div class="kpi-value" id="kpi-cost-shift" style="color: #a78bfa;">+18.4% MoM</div>
+          <div class="kpi-sub">Ocean & Air Surcharges</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">🏭 Bangladesh RMG Relevance</div>
+          <div class="kpi-value" id="kpi-bd-relevance" style="color: #34d399;">High Exposure</div>
+          <div class="kpi-sub">Chattogram Port Turnaround</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">🛡️ Sourcing Risk Index</div>
+          <div class="kpi-value" id="kpi-risk-index" style="color: #f43f5e;">78.4 / 100</div>
+          <div class="kpi-sub">Severe Disruption Phase</div>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div class="filter-bar">
+        <div class="filter-group">
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-dim);">FILTER:</span>
+          <select id="filter-category">
+            <option value="All">All Categories</option>
+            <option value="Shipping">Shipping & Freight</option>
+            <option value="Tariffs">Tariffs & Trade Controls</option>
+            <option value="Procurement">Procurement & Sourcing</option>
+            <option value="Commodities">Commodities & Minerals</option>
+            <option value="Semiconductors">Semiconductors & Electronics</option>
+            <option value="Manufacturing">Manufacturing & Factories</option>
+            <option value="Logistics">Logistics & Ports</option>
+          </select>
+
+          <select id="filter-region">
+            <option value="All">All Regions</option>
+            <option value="Asia Pacific">Asia Pacific</option>
+            <option value="Europe">Europe</option>
+            <option value="North America">North America</option>
+            <option value="Middle East">Middle East</option>
+            <option value="South Asia">South Asia / Bangladesh</option>
+            <option value="Latin America">Latin America</option>
+          </select>
+
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 11px; color: var(--text-dim);">Min Priority:</span>
+            <input type="range" id="filter-min-score" min="30" max="95" step="5" value="50" style="width: 80px;" />
+            <span id="label-min-score" style="font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;">50</span>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <span style="font-size: 11px; color: var(--text-dim);">Sort:</span>
+          <select id="sort-by">
+            <option value="priority">Priority Score (Highest First)</option>
+            <option value="recency">Publication Date (Newest First)</option>
+            <option value="impact">Lead Time Impact</option>
+          </select>
+          <span id="filtered-count-label" style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim);">Showing 20 items</span>
+        </div>
+      </div>
+
+      <!-- News Cards Feed -->
+      <div id="news-cards-container" style="display: flex; flex-direction: column; gap: 12px;">
+        <!-- Populated via popup.js -->
+      </div>
+    </div>
+
+    <!-- View 2: Top 10 Things to Know -->
+    <div id="tab-content-top10" class="tab-pane" style="display: none; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <div>
+          <h2 style="font-size: 15px; font-weight: 800;">⚡ Top 10 Things to Know in Global Supply Chains Today</h2>
+          <p style="font-size: 11px; color: var(--text-dim);">Ranked by algorithmic 100-point multi-factor priority scoring</p>
+        </div>
+        <span class="version-tag">FACT-CORROBORATED</span>
+      </div>
+      <div id="top10-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
+
+    <!-- View 3: Risk Radar -->
+    <div id="tab-content-radar" class="tab-pane" style="display: none; flex-direction: column; gap: 12px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <div>
+          <h2 style="font-size: 15px; font-weight: 800;">🧭 Real-Time Risk Radar by Domain</h2>
+          <p style="font-size: 11px; color: var(--text-dim);">Live severity scores across critical procurement vectors</p>
+        </div>
+      </div>
+      <div id="radar-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;"></div>
+    </div>
+
+    <!-- View 4: Regional Heatmap -->
+    <div id="tab-content-heatmap" class="tab-pane" style="display: none; flex-direction: column; gap: 12px;">
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <h2 style="font-size: 15px; font-weight: 800;">🗺️ Regional Risk Heatmap</h2>
+        <p style="font-size: 11px; color: var(--text-dim);">Worldwide geographical disruption indices and affected trade corridors</p>
+      </div>
+      <div id="heatmap-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;"></div>
+    </div>
+
+    <!-- View 5: 30-Day Forecast -->
+    <div id="tab-content-forecast" class="tab-pane" style="display: none; flex-direction: column; gap: 12px;">
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <h2 style="font-size: 15px; font-weight: 800;">📈 30-Day Procurement Impact Forecast</h2>
+        <p style="font-size: 11px; color: var(--text-dim);">Forward-looking predictive trajectory of carrier capacity, tariffs, and component inventory</p>
+      </div>
+      <div id="forecast-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
+
+    <!-- View 6: Emerging Trends -->
+    <div id="tab-content-trends" class="tab-pane" style="display: none; flex-direction: column; gap: 12px;">
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <h2 style="font-size: 15px; font-weight: 800;">📊 Emerging Trends & Story Clusters</h2>
+        <p style="font-size: 11px; color: var(--text-dim);">Aggregated story clusters tracking multi-day development trajectories</p>
+      </div>
+      <div id="trends-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
+
+    <!-- View 7: Bangladesh Impact -->
+    <div id="tab-content-bangladesh" class="tab-pane" style="display: none; flex-direction: column; gap: 12px;">
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+        <h2 style="font-size: 15px; font-weight: 800;">🇧🇩 Bangladesh Sourcing & RMG Sector Intelligence</h2>
+        <p style="font-size: 11px; color: var(--text-dim);">Direct relevance analysis for Dhaka/Chattogram RMG, textile yarn, feeder transit, and EU/US export quotas</p>
+      </div>
+      <div id="bangladesh-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+    </div>
+
+    <!-- View 8: Video Brief Studio -->
+    <div id="tab-content-videoBriefs" class="tab-pane" style="display: none; flex-direction: column; gap: 14px;">
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <h2 style="font-size: 15px; font-weight: 800;">🎬 Fact-Locked Video Brief Studio</h2>
+          <p style="font-size: 11px; color: var(--text-dim);">Generate zero-hallucination video scripts in Bangla or English with timeline timestamps and scene plans</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; background: var(--bg-card); padding: 12px; border-radius: 9px; border: 1px solid var(--border-color);">
+        <div style="flex: 1; min-width: 200px;">
+          <label style="font-size: 10px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 4px;">SELECT NEWS STORY:</label>
+          <select id="studio-select-story" style="width: 100%;">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div style="width: 110px;">
+          <label style="font-size: 10px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 4px;">DURATION:</label>
+          <select id="studio-duration" style="width: 100%;">
+            <option value="30s">30s (Short)</option>
+            <option value="60s" selected>60s (Standard)</option>
+            <option value="90s">90s (In-Depth)</option>
+            <option value="3m">3 Minutes</option>
+            <option value="5m">5 Minutes</option>
+          </select>
+        </div>
+
+        <div style="width: 110px;">
+          <label style="font-size: 10px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 4px;">LANGUAGE:</label>
+          <select id="studio-language" style="width: 100%;">
+            <option value="Bangla" selected>বাংলা (Bangla)</option>
+            <option value="English">English</option>
+            <option value="Bangla + English">Bangla + English</option>
+          </select>
+        </div>
+
+        <div style="flex: 1; min-width: 160px;">
+          <label style="font-size: 10px; font-weight: 700; color: var(--text-dim); display: block; margin-bottom: 4px;">TONE:</label>
+          <select id="studio-tone" style="width: 100%;">
+            <option value="Professional News Documentary">Professional News Documentary</option>
+            <option value="Hard-Hitting Financial">Hard-Hitting Financial (মার্জিন ও লোকসান)</option>
+            <option value="Casual Summary">Casual Summary (সহজ ও সাবলীল)</option>
+            <option value="RMG Supply Chain Specialist">RMG Supply Chain Specialist (পোশাক খাত)</option>
+            <option value="Executive Sourcing Brief">Executive Sourcing Brief</option>
+          </select>
+        </div>
+
+        <div style="display: flex; align-items: flex-end;">
+          <button id="btn-studio-generate" class="btn btn-primary" style="height: 30px;">
+            🎬 Generate Fact-Locked Script
+          </button>
+        </div>
+      </div>
+
+      <div id="studio-output-area" style="display: none; flex-direction: column; gap: 12px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <span style="font-size: 12px; font-weight: 700; color: #a78bfa;" id="studio-output-title">Generated Script & Visual Breakdown:</span>
+          <button id="btn-studio-copy" class="btn btn-emerald" style="font-size: 10px; padding: 4px 8px;">📋 Copy Full Narration</button>
+        </div>
+        <textarea id="studio-script-textarea" readonly style="width: 100%; min-height: 220px; font-family: 'JetBrains Mono', monospace; font-size: 11px; padding: 10px; border-radius: 8px; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main);"></textarea>
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================== MODALS ======================== -->
+
+  <!-- Modal 1: Settings & Multi-Provider AI -->
+  <div id="modal-settings" class="modal-overlay">
+    <div class="modal-box" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ Multi-Engine Search Cascade & AI Auto-Failover (v3.5.0)</div>
+        <button class="btn btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Settings Internal Navigation Tabs -->
+        <div class="settings-tab-nav">
+          <button class="settings-tab-btn active" data-stab="search">🔍 Free Search APIs & Serial Waterfall</button>
+          <button class="settings-tab-btn" data-stab="ai">🤖 AI Models & 429 Failover</button>
+          <button class="settings-tab-btn" data-stab="preferences">⚙️ Auto-Failover & Preferences</button>
+        </div>
+
+        <!-- TAB 1: FREE SEARCH APIS & WATERFALL SERIAL -->
+        <div id="settings-pane-search" class="settings-pane active">
+          <div style="background: rgba(37, 99, 235, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 10px 12px; font-size: 11px; line-height: 1.4;">
+            <strong style="color: #60a5fa;">🌊 Multi-Engine Search Waterfall Cascade:</strong>
+            Enter your free API keys for any or all of the search engines below. Use the <strong>▲ Up</strong> and <strong>▼ Down</strong> buttons in the serial list to order which search engine is attempted 1st, 2nd, 3rd, etc.
+            <div style="margin-top: 4px; color: var(--text-dim); font-size: 10px;">
+              ⚡ <em>If your 1st priority engine runs out of free requests or returns HTTP 429 Quota Exceeded, the system automatically switches to your 2nd and 3rd provider instantly with 0 manual intervention!</em>
+            </div>
+          </div>
+
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <label style="font-size: 11px; font-weight: 700;">Search Waterfall Priority Order (1st, 2nd, 3rd...):</label>
+              <span style="font-size: 10px; color: var(--text-dim);">Reorder priority using buttons:</span>
+            </div>
+            <div class="waterfall-list" id="search-waterfall-list">
+              <!-- Populated dynamically via popup.js with ▲ / ▼ controls -->
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid var(--border-color); padding-top: 10px;">
+            <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 8px;">Configure Free Search API Keys & Test:</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <!-- Tavily -->
+              <div class="key-entry-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-weight: 700; font-size: 11px;">Tavily Search API <span style="font-size: 10px; font-weight: 400; color: #34d399;">(1,000 Free Credits/Mo)</span></span>
+                  <a href="https://app.tavily.com/sign-in" target="_blank" style="color: #60a5fa; font-size: 10px;">Get Free Tavily Key ↗</a>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <input type="password" id="input-key-tavily" placeholder="tvly-..." style="flex: 1;" />
+                  <button class="btn btn-test-search" data-provider="tavily" style="padding: 4px 8px; font-size: 10px;">🧪 Test</button>
+                </div>
+                <span id="test-status-tavily" style="font-size: 10px; font-family: 'JetBrains Mono', monospace;"></span>
+              </div>
+
+              <!-- Serper.dev -->
+              <div class="key-entry-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-weight: 700; font-size: 11px;">Serper.dev Google News <span style="font-size: 10px; font-weight: 400; color: #34d399;">(2,500 Free Queries)</span></span>
+                  <a href="https://serper.dev/signup" target="_blank" style="color: #60a5fa; font-size: 10px;">Get Free Serper Key ↗</a>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <input type="password" id="input-key-serper" placeholder="Enter Serper API key..." style="flex: 1;" />
+                  <button class="btn btn-test-search" data-provider="serper" style="padding: 4px 8px; font-size: 10px;">🧪 Test</button>
+                </div>
+                <span id="test-status-serper" style="font-size: 10px; font-family: 'JetBrains Mono', monospace;"></span>
+              </div>
+
+              <!-- Brave Search -->
+              <div class="key-entry-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-weight: 700; font-size: 11px;">Brave Search API <span style="font-size: 10px; font-weight: 400; color: #34d399;">(2,000 Free Queries/Mo)</span></span>
+                  <a href="https://brave.com/search/api/" target="_blank" style="color: #60a5fa; font-size: 10px;">Get Free Brave Key ↗</a>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <input type="password" id="input-key-brave" placeholder="BSA-..." style="flex: 1;" />
+                  <button class="btn btn-test-search" data-provider="brave" style="padding: 4px 8px; font-size: 10px;">🧪 Test</button>
+                </div>
+                <span id="test-status-brave" style="font-size: 10px; font-family: 'JetBrains Mono', monospace;"></span>
+              </div>
+
+              <!-- Exa Neural Search -->
+              <div class="key-entry-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-weight: 700; font-size: 11px;">Exa Neural Search <span style="font-size: 10px; font-weight: 400; color: #34d399;">(1,000 Free Searches)</span></span>
+                  <a href="https://dashboard.exa.ai/" target="_blank" style="color: #60a5fa; font-size: 10px;">Get Free Exa Key ↗</a>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <input type="password" id="input-key-exa" placeholder="Enter Exa API key..." style="flex: 1;" />
+                  <button class="btn btn-test-search" data-provider="exa" style="padding: 4px 8px; font-size: 10px;">🧪 Test</button>
+                </div>
+                <span id="test-status-exa" style="font-size: 10px; font-family: 'JetBrains Mono', monospace;"></span>
+              </div>
+
+              <!-- Firecrawl -->
+              <div class="key-entry-card">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-weight: 700; font-size: 11px;">Firecrawl Web Scraper API <span style="font-size: 10px; font-weight: 400; color: #34d399;">(500 Free Scrapes)</span></span>
+                  <a href="https://www.firecrawl.dev/app/api-keys" target="_blank" style="color: #60a5fa; font-size: 10px;">Get Free Firecrawl Key ↗</a>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                  <input type="password" id="input-key-firecrawl" placeholder="fc-..." style="flex: 1;" />
+                  <button class="btn btn-test-search" data-provider="firecrawl" style="padding: 4px 8px; font-size: 10px;">🧪 Test</button>
+                </div>
+                <span id="test-status-firecrawl" style="font-size: 10px; font-family: 'JetBrains Mono', monospace;"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: AI LLM MODELS & 429 FAILOVER -->
+        <div id="settings-pane-ai" class="settings-pane">
+          <div style="background: rgba(168, 85, 247, 0.08); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 10px 12px; font-size: 11px; line-height: 1.4;">
+            <strong style="color: #c084fc;">⚡ Cross-Provider AI Quota Failover:</strong>
+            Select your preferred primary AI provider below, or arrange the 1st, 2nd, 3rd serial order. If your primary key reaches its quota limit (HTTP 429), it immediately cascades to your next provider in line!
+          </div>
+
+          <div>
+            <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 6px;">Active Primary AI Provider:</label>
+            <div class="provider-grid" id="settings-provider-buttons"></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 11px; font-weight: 700;" id="settings-key-label">Active Provider API Key:</label>
+            <input type="password" id="settings-api-key" placeholder="Enter API Key" />
+            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 10px; color: var(--text-dim);">
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #60a5fa;" id="settings-key-link">Get Free API Key</a>
+              <span>Stored strictly in local browser memory</span>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button id="btn-test-settings-key" class="btn">🧪 Test Active Connection</button>
+            <span id="settings-test-status" style="font-size: 11px; font-family: 'JetBrains Mono', monospace;"></span>
+          </div>
+
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+              <label style="font-size: 11px; font-weight: 700;">AI Failover Priority Serial (1st, 2nd, 3rd...):</label>
+              <span style="font-size: 10px; color: var(--text-dim);">Cascades when 429 quota hits:</span>
+            </div>
+            <div class="waterfall-list" id="ai-waterfall-list">
+              <!-- Populated dynamically via popup.js -->
+            </div>
+          </div>
+
+          <!-- Dynamic Model Discovery & Override -->
+          <div style="background: var(--bg-base); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+              <span style="font-size: 11px; font-weight: 700;">Dynamic Model Discovery Engine:</span>
+              <span class="version-tag" id="settings-model-detected-badge">gemini-3.8-flash</span>
+            </div>
+            <p style="font-size: 10px; color: var(--text-dim); margin-bottom: 6px;">
+              The extension automatically discovers newly released Gemini models via Google&apos;s /v1beta/models API. You can also manually specify an exact model identifier below:
+            </p>
+            <input type="text" id="settings-custom-model" placeholder="Default: Auto-Discovered Best Model (e.g. gemini-3.8-flash)" />
+          </div>
+        </div>
+
+        <!-- TAB 3: AUTO-FAILOVER & PREFERENCES -->
+        <div id="settings-pane-preferences" class="settings-pane">
+          <div style="background: var(--bg-base); border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <div>
+              <span style="font-size: 11px; font-weight: 700; display: block;">Automatic Quota Limit Failover</span>
+              <span style="font-size: 10px; color: var(--text-dim);">Seamlessly switch from 1st &rarr; 2nd &rarr; 3rd provider on HTTP 429 rate limit or exhausted credits</span>
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+              <input type="checkbox" id="settings-auto-failover" checked style="width: 16px; height: 16px;" />
+              <span style="font-size: 11px; font-weight: 700; color: #34d399;">Enabled</span>
+            </label>
+          </div>
+
+          <!-- Default Script Preferences -->
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div>
+              <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Default Script Language:</label>
+              <select id="settings-default-lang" style="width: 100%;">
+                <option value="Bangla">বাংলা (Bangla)</option>
+                <option value="English">English</option>
+                <option value="Bangla + English">Bangla + English (Bilingual)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 700; display: block; margin-bottom: 4px;">Default Duration:</label>
+              <select id="settings-default-duration" style="width: 100%;">
+                <option value="30s">30 Seconds</option>
+                <option value="60s" selected>60 Seconds</option>
+                <option value="90s">90 Seconds</option>
+                <option value="3m">3 Minutes</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-close-modal">Cancel</button>
+        <button id="btn-save-settings" class="btn btn-primary">Save All Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Daily Executive CPO Brief -->
+  <div id="modal-executive-brief" class="modal-overlay">
+    <div class="modal-box" style="max-width: 740px;">
+      <div class="modal-header">
+        <div class="modal-title">📋 CPO Daily Executive Briefing</div>
+        <button class="btn btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body" id="executive-brief-content">
+        <div style="text-align: center; padding: 20px; color: var(--text-dim);">Loading Daily Executive Briefing...</div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-copy-brief" class="btn btn-emerald">📋 Copy Briefing</button>
+        <button class="btn btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Score Breakdown Modal -->
+  <div id="modal-score-breakdown" class="modal-overlay">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title">📊 9-Factor Priority Score Breakdown</div>
+        <button class="btn btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body" id="score-breakdown-content"></div>
+      <div class="modal-footer">
+        <button class="btn btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Article Detail Modal -->
+  <div id="modal-article-detail" class="modal-overlay">
+    <div class="modal-box" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title" id="article-detail-title">Article Intelligence Dossier</div>
+        <button class="btn btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body" id="article-detail-content"></div>
+      <div class="modal-footer">
+        <button id="btn-detail-video-brief" class="btn btn-primary">🎬 Generate Video Brief</button>
+        <button class="btn btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 5: Bangla Readme Guide -->
+  <div id="modal-bangla-readme" class="modal-overlay">
+    <div class="modal-box" style="max-width: 720px;">
+      <div class="modal-header">
+        <div class="modal-title">📖 এক্সটেনশন ব্যবহার নির্দেশিকা ও ফিচার পরিচিতি (Bangla Readme)</div>
+        <button class="btn btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body" style="line-height: 1.6;">
+        <h4 style="color: #34d399; font-size: 13px;">১. সম্পূর্ণ স্ট্যান্ডঅ্যালোন ও স্বাধীন ব্রাউজার এক্সটেনশন</h4>
+        <p style="color: var(--text-muted);">
+          এই এক্সটেনশনটি ওয়েব ভার্সনের সম্পূর্ণ ১০০% ডুপ্লিকেট (সবগুলো ট্যাব, রিস্ক রাডার, হিটম্যাপ, ৩০-দিনের ফোরকাস্ট, এবং ভিডিও ব্রিফ স্টুডিও অন্তর্ভুক্ত)। এটি সম্পূর্ণ ক্লায়েন্ট-সাইড আর্কিটেকচারে চলে—অর্থাৎ আপনি বা আপনার বন্ধুরা এটি ইনস্টল করে নিজস্ব ফ্রি Google Gemini API Key প্রবেশ করিয়ে সরাসরি ব্রাউজার থেকে লাইভ নিউজ সার্চ ও স্ক্রিপ্ট তৈরি করতে পারবেন। এতে ডেভেলপার সার্ভারের ওপর শূন্য (0) লোড পড়ে।
+        </p>
+
+        <h4 style="color: #60a5fa; font-size: 13px; margin-top: 8px;">২. জেমিনি মডেল অটো-আপডেট (Dynamic Auto-Discovery)</h4>
+        <p style="color: var(--text-muted);">
+          জেমিনি যদি নতুন মডেল বের করে (যেমন gemini-3.8-flash, gemini-3.9-flash বা ফিউচার ভার্সন), আমাদের ইঞ্জিন স্বয়ংক্রিয়ভাবে Google API এর <code>/v1beta/models</code> কল করে সচল মডেলগুলো শনাক্ত করে এবং সর্বোত্তম মডেলটি নির্বাচন করে। এছাড়াও সেটিংস-এ আপনি যেকোনো কাস্টম মডেলের নাম সরাসরি লিখেও ব্যবহার করতে পারবেন।
+        </p>
+
+        <h4 style="color: #fbbf24; font-size: 13px; margin-top: 8px;">৩. ফ্যাক্ট-লকড ভিডিও ব্রিফ ও স্ক্রিপ্ট জেনারেটর</h4>
+        <p style="color: var(--text-muted);">
+          যেকোনো খবরের পাশে <strong>🎬 Video Brief</strong> বাটনে ক্লিক করলে সেকেন্ডেই ৩০ সেকেন্ড, ৬০ সেকেন্ড বা ৩ মিনিটের প্রাঞ্জল বাংলা ভয়েসওভার স্ক্রিপ্ট, সিন-বাই-সিন ভিজ্যুয়াল প্ল্যান এবং সোশ্যাল মিডিয়া হেডলাইন তৈরি হয়ে যাবে।
+        </p>
+
+        <h4 style="color: #c084fc; font-size: 13px; margin-top: 8px;">৪. ফুল-স্ক্রিন ট্যাব ভিউ (Full Desktop Tab)</h4>
+        <p style="color: var(--text-muted);">
+          আপনি যদি এক্সটেনশনের ছোট পপআপ ছাড়াও বড় কম্পিউটার স্ক্রিনে কাজ করতে চান, উপরের ডানপাশে <strong>⛶ Open Full Tab</strong> বাটনে ক্লিক করলেই এই এক্সটেনশনটি একটি পূর্ণাঙ্গ ব্রাউজার ট্যাবে বড় আকারে খুলে যাবে!
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-close-modal">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 6: AI Status & Auto-Discovery Info -->
+  <div id="modal-ai-status" class="modal-overlay">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <div class="modal-title">⚡ AI Engine Status & Model Auto-Discovery</div>
+        <button class="btn btn-close-modal">✕</button>
+      </div>
+      <div class="modal-body" id="ai-status-content">
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 12px; border-radius: 8px;">
+          <strong style="color: #34d399; font-size: 13px;">Dynamic Model Auto-Discovery Active (v3.2.0)</strong>
+          <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+            Your extension dynamically queries Google&apos;s Generative Language API endpoint. When Google updates Gemini models, the extension automatically accepts and switches to the newest high-throughput flash model.
+          </p>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--text-dim);">AUTOMATIC FALLBACK LADDER:</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--bg-base); border: 1px solid var(--border-color); padding: 10px; border-radius: 6px; display: flex; flex-direction: column; gap: 4px;">
+            <div style="color: #34d399;">1. gemini-flash-latest (Dynamic Google Alias)</div>
+            <div style="color: #60a5fa;">2. gemini-3.8-flash (Primary High-Throughput Reasoning)</div>
+            <div style="color: #93c5fd;">3. gemini-3.5-flash (Google Search Grounding Specialist)</div>
+            <div style="color: #a78bfa;">4. gemini-2.5-flash (Resilient Failover)</div>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; color: var(--text-muted);">
+          Currently Selected Model: <strong id="status-current-model-text" style="color: #60a5fa;">gemini-3.8-flash</strong>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

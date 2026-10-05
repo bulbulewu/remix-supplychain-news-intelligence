@@ -1,0 +1,8 @@
+{
+  "name": "Remix SupplyChain News Intelligence",
+  "description": "AI-powered global supply chain and procurement news intelligence platform. Real-time discovery, deduplication, priority scoring, event clustering, and risk analysis.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
